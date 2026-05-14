@@ -1,7 +1,8 @@
 
 services:
   wechat-selkies:
-    image: nickrunning/wechat-selkies:latest
+    build: .
+    image: docker-wxcli:latest
     container_name: wechat-selkies
     cap_add:
       - SYS_PTRACE

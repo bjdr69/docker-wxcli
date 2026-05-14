@@ -46,24 +46,23 @@ WeChat 登录 → 内存中生成 passphrase (32B)
 ## 快速开始
 
 ```bash
-# 1. 启动容器
+# 1. 构建并启动容器（依赖已预装在镜像中）
 docker-compose up -d
 
-# 2. 等待容器就绪后，注入依赖
-#    注意：容器重启后 apt 安装的包会丢失，需要重新运行
-docker exec -it wechat-selkies bash /config/setup_env.sh
+# 2. 验证环境（可选，确认 gdb/sqlcipher/wx-cli 就绪）
+docker exec wechat-selkies bash /config/setup_env.sh
 
 # 3. 对齐配置路径
-docker exec -it wechat-selkies bash /config/config_align.sh
+docker exec wechat-selkies bash /config/config_align.sh
 
 # 4. 浏览器打开 http://localhost:3000，启动微信到二维码/登录界面
 #
 # 5. 提取密钥（详见下方时序说明）
-docker exec -it wechat-selkies bash /config/extract_keys.sh
+docker exec wechat-selkies bash /config/extract_keys.sh
 
 # 6. 冒烟测试
-docker exec -it wechat-selkies /config/tools/wx-cli sessions
-docker exec -it wechat-selkies /config/tools/wx-cli search "关键词" --json
+docker exec wechat-selkies /config/tools/wx-cli sessions
+docker exec wechat-selkies /config/tools/wx-cli search "关键词" --json
 ```
 
 ## 端口
@@ -103,7 +102,8 @@ docker-wxcli/
 ```yaml
 services:
   wechat-selkies:
-    image: nickrunning/wechat-selkies:latest
+    build: .
+    image: docker-wxcli:latest
     cap_add:
       - SYS_PTRACE          # gdb ptrace 必须
     shm_size: "1gb"         # PBKDF2 防 OOM
@@ -115,23 +115,24 @@ services:
     restart: unless-stopped
 ```
 
-> **注意：** 此容器使用 nginx 暴露 noVNC（3000-3001），非传统的 5800-5900。容器基于 s6 init 系统，每次重启会重置 `/opt/wechat` 外的 apt 安装包。
+> **注意：** 此容器使用 nginx 暴露 noVNC（3000-3001），非传统的 5800-5900。容器基于 s6 init 系统。gdb、python3-pip、sqlcipher 等依赖已通过自定义 Dockerfile 预装在镜像中，`docker-compose down/up` 后不丢失。
 
-### Phase 2 — 依赖注入
+### Phase 2 — 环境验证
 
-在容器内安装工具链：
+依赖已预装在 `docker-wxcli` 自定义镜像中（gdb、sqlcipher3、pycryptodome、wx-cli、wcdb-key-tool），容器重建后不丢失。
+
+可选验证：
 
 ```bash
 docker exec wechat-selkies bash /config/setup_env.sh
 ```
 
-安装内容：
-- **系统包：** `gdb`, `python3-pip`, `sqlcipher`
+验证清单：
+- **系统包：** `gdb`, `python3`, `sqlcipher`, `wget`
 - **Python：** `sqlcipher3`, `pycryptodome`
-- **wcdb-key-tool：** `github.com/bjdr69/wcdb-key-tool` 克隆到 `/config/tools/`
-- **wx-cli：** `github.com/jackwener/wx-cli` v0.1.10 Linux x86_64 二进制
+- **工具：** `wcdb-key-tool`, `wx-cli`
 
-容器重启后 apt 包丢失，需要重跑此脚本（通过 `/config` 卷持久化的 wx-cli 和 wcdb-key-tool 保留）。
+> 不再需要手动 apt/pip 安装。`setup_env.sh` 现在仅为验证脚本。
 
 ### Phase 3 — 配置对齐
 
@@ -211,13 +212,13 @@ docker exec wechat-selkies /config/tools/wx-cli unread
 
 ## 容器重启后的恢复流程
 
-此容器每次重启会丢失 gdb、python3-pip、sqlcipher 等 apt 包。恢复步骤：
+依赖已预装在 `docker-wxcli` 镜像中，容器重建不丢失。恢复步骤：
 
 ```bash
 # 1. 检查容器状态
 docker ps --filter name=wechat-selkies
 
-# 2. 重装依赖（apt 包丢失，但 wcdb-key-tool/wx-cli 在 /config 卷中保留）
+# 2. 验证依赖仍然可用
 docker exec wechat-selkies bash /config/setup_env.sh
 
 # 3. 验证密钥仍然有效
@@ -238,27 +239,24 @@ cd docker-wxcli
 # Step 2: 创建持久化目录
 mkdir -p config/tools config/.wx-cli
 
-# Step 3: 启动容器
+# Step 3: 构建镜像并启动容器（依赖已预装）
 docker-compose up -d
 sleep 10  # 等待容器初始化
 
-# Step 4: 安装依赖
-docker exec wechat-selkies bash /config/setup_env.sh
-
-# Step 5: 验证 SYS_PTRACE
+# Step 4: 验证 SYS_PTRACE
 docker exec wechat-selkies capsh --print | grep cap_sys_ptrace
 
-# Step 6: 浏览器打开 http://localhost:3000
+# Step 5: 浏览器打开 http://localhost:3000
 #         双击 WeChat 图标，等待出现二维码
 
-# Step 7: 运行提取（配合扫码时序）
+# Step 6: 运行提取（配合扫码时序）
 #         a. 先让微信处于二维码/未登录状态
 #         b. 运行脚本：
 docker exec -it wechat-selkies bash /config/extract_keys.sh
 #         c. 按提示退出登录 → 重新扫码登录
 #         d. 等待 PBKDF2 派生完成
 
-# Step 8: 查询验证
+# Step 7: 查询验证
 docker exec wechat-selkies /config/tools/wx-cli sessions
 ```
 
@@ -266,7 +264,6 @@ docker exec wechat-selkies /config/tools/wx-cli sessions
 
 | 问题 | 原因 | 解决 |
 |------|------|------|
-| `gdb: not found` | 容器重启后 apt 包丢失 | `docker exec wechat-selkies bash /config/setup_env.sh` |
 | `Cannot access memory at address` | 微信进程 PID 变化后 base addr 改变 | 重新运行 extract（用当前 PID） |
 | `未能捕获 passphrase` | 扫码登录发生在断点设置之前 | 先退到二维码，运行脚本，再扫码 |
 | passphrase 捕获到但密钥派生失败 | 微信版本与 wcdb-key-tool 不兼容 | 更新 wcdb-key-tool: `git -C /config/tools/wcdb-key-tool pull` |

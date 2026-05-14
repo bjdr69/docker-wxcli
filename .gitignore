@@ -26,6 +26,7 @@ config/ssl/
 
 # wx-cli decrypted cache
 config/.wx-cli/cache/
+config/.wx-cli/config.json
 
 # Binary tools (re-downloadable)
 config/tools/wx-cli
@@ -37,3 +38,4 @@ config/setup_env.sh
 config/config_align.sh
 config/extract_keys.sh
 config/start_daemon.sh
+config/docker-entrypoint.sh
