@@ -280,8 +280,14 @@ docker exec wechat-selkies /config/tools/wx-cli sessions
 - 密钥仅在容器本地使用，不通过网络传输
 - 建议将 `config/.wx-cli/all_keys.json` 加入 `.gitignore`
 
-## 参考
+## 引用项目与许可
 
-- [nickrunning/wechat-selkies](https://github.com/nickrunning/wechat-selkies) — 容器基础镜像
-- [TANGandXUE/wcdb-key-tool](https://github.com/TANGandXUE/wcdb-key-tool) — 微信数据库密钥提取
-- [jackwener/wx-cli](https://github.com/jackwener/wx-cli) — 微信数据 CLI
+本项目整合了以下开源项目，感谢各位作者的贡献：
+
+| 项目 | 许可证 | 说明 |
+|------|--------|------|
+| [nickrunning/wechat-selkies](https://github.com/nickrunning/wechat-selkies) | MIT | 容器基础镜像 |
+| [TANGandXUE/wcdb-key-tool](https://github.com/TANGandXUE/wcdb-key-tool) | MIT | 微信数据库密钥提取工具 |
+| [jackwener/wx-cli](https://github.com/jackwener/wx-cli) | Apache-2.0 | 微信数据 CLI 工具 |
+
+本项目本身采用 **MIT 许可证**（见 `LICENSE`），但引用的 wx-cli 为 **Apache-2.0** 许可证。Apache-2.0 要求衍生作品附带许可证副本和署名声明，详见 `NOTICE` 文件。
