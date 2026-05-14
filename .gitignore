@@ -1,0 +1,39 @@
+# Sensitive: WeChat database keys and passphrase
+config/.wx-cli/all_keys.json
+config/.wx-cli/cache/
+config/.wx-cli/daemon.log
+config/.wx-cli/daemon.pid
+config/.wcdb-key-tool/
+
+# Sensitive: WeChat user data
+config/xwechat_files/
+config/.xwechat/
+config/.XDG/
+config/.dbus/
+config/.pki/
+config/.cache/
+config/.config/
+config/.local/
+config/.bashrc
+config/.Xresources
+config/.xsettingsd
+config/.wget-hsts
+config/.sys1og.conf
+config/Desktop/
+
+# SSL certs (container-generated)
+config/ssl/
+
+# wx-cli decrypted cache
+config/.wx-cli/cache/
+
+# Binary tools (re-downloadable)
+config/tools/wx-cli
+config/tools/wcdb-key-tool/
+
+# Docker
+config/docker-compose.yml
+config/setup_env.sh
+config/config_align.sh
+config/extract_keys.sh
+config/start_daemon.sh

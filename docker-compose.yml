@@ -1,0 +1,17 @@
+
+services:
+  wechat-selkies:
+    image: nickrunning/wechat-selkies:latest
+    container_name: wechat-selkies
+    cap_add:
+      - SYS_PTRACE
+    shm_size: "1gb"
+    volumes:
+      - ./config:/config
+    ports:
+      - "3000:3000"   # nginx HTTP web interface
+      - "3001:3001"   # nginx HTTPS web interface
+    environment:
+      - TZ=Asia/Shanghai
+      - DISPLAY=:0
+    restart: unless-stopped
